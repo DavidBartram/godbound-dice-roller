@@ -1,91 +1,82 @@
-import random
-import re
-
-def validate_roll(roll):
-    roll = roll.replace(' ','')
-    roll = roll.lower()
-
-    if '+-' not in roll:
-        roll = roll.replace('-','+-')
-
-    splitroll = re.split('d|\+', roll)
-
-    digitsonly = all(x.isnumeric() for x in splitroll)
-
-    if (len(splitroll) == 2 or len(splitroll) == 3) and digitsonly:
-        return True
-    else:
-        return False
-
-def gbtable(results):
-    tabletotal = 0
-    for result in results:
-        if result >1:
-            if result <=5:
-                tabletotal = tabletotal + 1
-            elif result <=9:
-                tabletotal = tabletotal + 2
-            else:
-                tabletotal = tabletotal + 4
-    return(tabletotal)
-
-def modify(results, mod):
-    modvalues = []
-    newresults = results
-    for i in range(0, len(results) ) :
-        newresults[i] = newresults[i] + mod
-        modvalues.append(gbtable(newresults))
-        newresults[i] = newresults[i] - mod
-    #print(f'modified results {modvalues}')
-    return(max(modvalues))
+from flask import Flask, request
+from processing import rolldice, validate_roll
 
 
-def rolldice(roll, multiple, target):
+application = Flask(__name__)
+application.config["DEBUG"] = True
 
-    roll = roll.replace(' ','')
-    roll = roll.lower()
+@application.route("/", methods=["GET", "POST"])
+def roller_page():
 
-    if '+-' not in roll:
-        roll = roll.replace('-','+-')
+   if request.method == "POST":
 
-    splitroll = re.split('d|\+', roll)
+        multiple = None
+        result = ''
+        num_targets = request.form["num_targets"]
 
-
-    if splitroll[0] == '':
-        numdice = 1
-    else:
-        numdice = int(splitroll[0])
-
-    sides = int(splitroll[1])
-
-    modifier = 0
-    if len(splitroll) == 3:
-        modifier = int(splitroll[2])
-
-    output = ''
-
-    sresults = random.choices(population = range(1,sides+1), k=numdice)
-
-    ttotal2 = modify(sresults, modifier)
-    stotal = sum(sresults) + modifier
-
-    if multiple == False:
-        if sides not in [2,3,4,6,8,10,12,20]:
-            output= f'NONSTANDARD ROLL = {numdice}d{sides}+{modifier} <br/> <br/>'
+        if num_targets.isdigit():
+            num_targets = int(num_targets)
         else:
-            output = f'Roll = {numdice}d{sides}+{modifier} <br/> <br/>'
+            num_targets = 1 #default to one target if the user puts something silly but not empty string into the number of targets field
 
-        output = output + f'table damage = <b>{ttotal2}</b> <br/> <br/>'
-        output = output + f'die results = {sresults} <br/> <br/>'
-        output = output + f'straight damage = {stotal} <br/> <br/>'
 
-    elif target ==1:
-        if sides not in [2,3,4,6,8,10,12,20]:
-            output = f'NONSTANDARD ROLL = {numdice}d{sides}+{modifier} <br/><br/>Target {target}:   table {ttotal2}  straight {stotal} <br/><br/>'
+        if num_targets==1:
+            multiple = False
+        elif num_targets>20:
+            num_targets = 20
         else:
-            output = f'Roll = {numdice}d{sides}+{modifier} <br/><br/>Target {target}:   table {ttotal2}  straight {stotal} <br/><br/>'
+            multiple = True
 
-    else:
-        output = output + f'Target {target}:   table {ttotal2}  straight {stotal} <br/><br/>'
+        roll = request.form["roll"]
 
-    return(output)
+        valid = validate_roll(roll)
+
+        if (roll=='' or num_targets==0 or not valid):
+            result = "You have not entered a valid roll. Please click New Roll and input a roll such as 4d10+3 or d8 - 2."
+            return '''
+                <html>
+                    <body>
+                        <h style="font: bold 30px arial">Godbound Damage Roller</h>
+                        <p style= "font: 25px arial">{result}</p>
+                        <form action="/">
+                            <p><input type="submit" style="margin-left: 2em; font: 25px arial" value="New Roll" /></p>
+                        </form>
+                    </body>
+                </html>
+            '''.format(result = result)
+
+        else:
+            for i in range(1,(num_targets+1)):
+                result = result + rolldice(roll, multiple, i)
+
+            return '''
+                <html>
+                    <body>
+                        <h style="font: bold 30px arial">Godbound Damage Roller</h>
+                        <p style= "font: 25px arial">{result}</p>
+                        <form action="/">
+                            <p><input type="submit" style="margin-left: 2em; font: 25px arial" value="New Roll" /></p>
+                        </form>
+                        <button onClick="window.location.reload();" style="margin-left:2em ;font: 25px arial">Reroll</button>
+                    </body>
+                </html>
+            '''.format(result = result)
+
+
+   else:
+
+    return '''
+            <html>
+            <body>
+                <h style="font: bold 30px arial">Godbound Damage Roller</h>
+                <form method="post" action=".">
+                    <p style ="font: 25px arial">Damage roll: <input style="font: 25px arial" name="roll" /></p>
+                    <p style ="font:25px arial"># Targets: <input style="font: 25px arial" name="num_targets" value="1" /></p>
+                    <p><input type="submit" style="font: 25px arial" value="Roll damage" /></p>
+                </form>
+            </body>
+        </html>
+    '''
+
+if __name__ == "__main__":
+    application.run(port=5000, debug=True)
