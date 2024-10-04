@@ -42,6 +42,7 @@ def roller_page():
                     <body>
                         <h style="font: bold 30px arial">Godbound Damage Roller</h>
                         <p style= "font: 25px arial">{result}</p>
+
                         <form action="/">
                             <p><input type="submit" style="margin-left: 2em; font: 25px arial" value="New Roll" /></p>
                         </form>
@@ -82,3 +83,5 @@ def roller_page():
         </html>
     '''
 
+if __name__ == "__main__":
+    app.run(host='0.0.0.0',port=5000, debug=True)

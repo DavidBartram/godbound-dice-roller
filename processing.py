@@ -10,7 +10,8 @@ def validate_roll(roll):
 
     splitroll = re.split('d|\+', roll)
 
-    digitsonly = all(x.isnumeric() for x in splitroll)
+
+    digitsonly = all(x.isnumeric() for x in [x.lstrip('-') for x in splitroll])
 
     if (len(splitroll) == 2 or len(splitroll) == 3) and digitsonly:
         return True
