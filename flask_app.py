@@ -1,4 +1,3 @@
-
 # Godbound damage roller Flask App
 
 from flask import Flask, request
@@ -8,25 +7,24 @@ from processing import rolldice, validate_roll
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
-@app.route("/", methods=["GET", "POST"])
 
+@app.route("/", methods=["GET", "POST"])
 def roller_page():
 
-   if request.method == "POST":
+    if request.method == "POST":
 
         multiple = None
-        result = ''
+        result = ""
         num_targets = request.form["num_targets"]
 
         if num_targets.isdigit():
             num_targets = int(num_targets)
         else:
-            num_targets = 1 #default to one target if the user puts something silly but not empty string into the number of targets field
+            num_targets = 1  # default to one target if the user puts something silly but not empty string into the number of targets field
 
-
-        if num_targets==1:
+        if num_targets == 1:
             multiple = False
-        elif num_targets>20:
+        elif num_targets > 20:
             num_targets = 20
         else:
             multiple = True
@@ -35,9 +33,9 @@ def roller_page():
 
         valid = validate_roll(roll)
 
-        if (roll=='' or num_targets==0 or not valid):
-            result = "You have not entered a valid roll. Please click New Roll and input a roll such as 4d10+3 or d8 - 2."
-            return '''
+        if roll == "" or num_targets == 0 or not valid:
+            result = f"You have not entered a valid roll. Please click New Roll and input a roll such as 4d10+3 or d8 - 2."
+            return """
                 <html>
                     <body>
                         <h style="font: bold 30px arial">Godbound Damage Roller</h>
@@ -48,13 +46,15 @@ def roller_page():
                         </form>
                     </body>
                 </html>
-            '''.format(result = result)
+            """.format(
+                result=result
+            )
 
         else:
-            for i in range(1,(num_targets+1)):
+            for i in range(1, (num_targets + 1)):
                 result = result + rolldice(roll, multiple, i)
 
-            return '''
+            return """
                 <html>
                     <body>
                         <h style="font: bold 30px arial">Godbound Damage Roller</h>
@@ -65,12 +65,13 @@ def roller_page():
                         <button onClick="window.location.reload();" style="margin-left:2em ;font: 25px arial">Reroll</button>
                     </body>
                 </html>
-            '''.format(result = result)
+            """.format(
+                result=result
+            )
 
+    else:
 
-   else:
-
-    return '''
+        return """
             <html>
             <body>
                 <h style="font: bold 30px arial">Godbound Damage Roller</h>
@@ -81,7 +82,8 @@ def roller_page():
                 </form>
             </body>
         </html>
-    '''
+    """
+
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
