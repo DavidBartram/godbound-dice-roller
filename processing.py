@@ -76,11 +76,6 @@ def rolldice(roll, multiple, target):
 
     output = ""
 
-    sresults = random.choices(population=range(1, sides + 1), k=numdice)
-
-    ttotal2 = modify(sresults, modifier)
-    stotal = sum(sresults) + modifier
-
     if numdice > 500:
         output += "MAXIMUM NUMBER OF DICE IS 500, rolling 500 instead <br/> <br/>"
         numdice = 500
@@ -88,6 +83,11 @@ def rolldice(roll, multiple, target):
     if sides > 100:
         output += "MAXIMUM DIE TYPE is d100, rolling d100 instead <br/> <br/>"
         sides = 100
+
+    sresults = random.choices(population=range(1, sides + 1), k=numdice)
+
+    ttotal2 = modify(sresults, modifier)
+    stotal = sum(sresults) + modifier
 
     if multiple == False:
         if sides not in [2, 3, 4, 6, 8, 10, 12, 20]:
